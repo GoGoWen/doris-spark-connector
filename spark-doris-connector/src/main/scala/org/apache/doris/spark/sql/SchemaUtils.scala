@@ -97,17 +97,23 @@ private[spark] object SchemaUtils {
       case "FLOAT"           => DataTypes.FloatType
       case "DOUBLE"          => DataTypes.DoubleType
       case "DATE"            => DataTypes.StringType
+      case "DATEV2"          => DataTypes.StringType
       case "DATETIME"        => DataTypes.StringType
+      case "DATETIMEV2"      => DataTypes.StringType
       case "BINARY"          => DataTypes.BinaryType
       case "DECIMAL"         => DecimalType(precision, scale)
       case "CHAR"            => DataTypes.StringType
-      case "LARGEINT"        => DataTypes.StringType
+      case "LARGEINT"        => DecimalType(38,0)
       case "VARCHAR"         => DataTypes.StringType
       case "DECIMALV2"       => DecimalType(precision, scale)
+      case "DECIMAL32"       => DecimalType(precision, scale)
+      case "DECIMAL64"       => DecimalType(precision, scale)
+      case "DECIMAL128"      => DecimalType(precision, scale)
       case "TIME"            => DataTypes.DoubleType
       case "STRING"          => DataTypes.StringType
-      case "HLL"             =>
-        throw new DorisException("Unsupported type " + dorisType)
+      case "ARRAY"           => DataTypes.StringType
+      case "HLL"             => DataTypes.BinaryType
+      case "BITMAP"          => DataTypes.BinaryType
       case _                 =>
         throw new DorisException("Unrecognized Doris type " + dorisType)
     }

@@ -239,6 +239,9 @@ public class RowBatch {
                         }
                         break;
                     case "DECIMALV2":
+                    case "DECIMAL32":
+                    case "DECIMAL64":
+                    case "DECIMAL128I":
                         Preconditions.checkArgument(mt.equals(Types.MinorType.DECIMAL),
                                 typeMismatchMessage(currentType, mt));
                         DecimalVector decimalVector = (DecimalVector) curFieldVector;
@@ -252,7 +255,9 @@ public class RowBatch {
                         }
                         break;
                     case "DATE":
+                    case "DATEV2":
                     case "DATETIME":
+                    case "DATETIMEV2":
                     case "LARGEINT":
                     case "CHAR":
                     case "VARCHAR":
@@ -267,6 +272,16 @@ public class RowBatch {
                             }
                             String value = new String(varCharVector.get(rowIndex), StandardCharsets.UTF_8);
                             addValueToRow(rowIndex, value);
+                        }
+                        break;
+                    case "HLL":
+                    case "BITMAP":
+                        Preconditions.checkArgument(mt.equals(Types.MinorType.VARCHAR),
+                                typeMismatchMessage(currentType, mt));
+                        VarCharVector varcharVector = (VarCharVector) curFieldVector;
+                        for (int rowIndex = 0; rowIndex < rowCountInOneBatch; rowIndex++) {
+                            Object fieldValue = varcharVector.isNull(rowIndex) ? null : varcharVector.get(rowIndex);
+                            addValueToRow(rowIndex, fieldValue);
                         }
                         break;
                     default:
