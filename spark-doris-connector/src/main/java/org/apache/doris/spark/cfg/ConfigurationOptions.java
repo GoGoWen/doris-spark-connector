@@ -53,6 +53,13 @@ public interface ConfigurationOptions {
     int DORIS_TABLET_SIZE_DEFAULT = 1;
     int DORIS_TABLET_SIZE_MIN = 1;
 
+    /**
+     * set the limitation for the partition size when query from doris to avoid
+     * full table scan make cluster unavailable. the default is -1, which means no limitation
+     */
+    String DORIS_PARTITION_SIZE = "doris.request.partition.size";
+    int DORIS_PARTITION_SIZE_DEFAULT = -1;
+
     String DORIS_BATCH_SIZE = "doris.batch.size";
     int DORIS_BATCH_SIZE_DEFAULT = 1024;
 

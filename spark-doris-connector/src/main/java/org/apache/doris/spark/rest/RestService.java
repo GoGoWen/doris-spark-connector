@@ -19,6 +19,8 @@ package org.apache.doris.spark.rest;
 
 import static org.apache.doris.spark.cfg.ConfigurationOptions.DORIS_FENODES;
 import static org.apache.doris.spark.cfg.ConfigurationOptions.DORIS_FILTER_QUERY;
+import static org.apache.doris.spark.cfg.ConfigurationOptions.DORIS_PARTITION_SIZE;
+import static org.apache.doris.spark.cfg.ConfigurationOptions.DORIS_PARTITION_SIZE_DEFAULT;
 import static org.apache.doris.spark.cfg.ConfigurationOptions.DORIS_READ_FIELD;
 import static org.apache.doris.spark.cfg.ConfigurationOptions.DORIS_REQUEST_AUTH_PASSWORD;
 import static org.apache.doris.spark.cfg.ConfigurationOptions.DORIS_REQUEST_AUTH_USER;
@@ -234,7 +236,7 @@ public class RestService implements Serializable {
      * find Doris RDD partitions from Doris FE.
      * @param cfg configuration of request
      * @param logger {@link Logger}
-     * @return an list of Doris RDD partitions
+     * @return a list of Doris RDD partitions
      * @throws DorisException throw when find partition failed
      */
     public static List<PartitionDefinition> findPartitions(Settings cfg, Logger logger) throws DorisException {
@@ -259,6 +261,7 @@ public class RestService implements Serializable {
         }, logger);
         logger.debug("Find partition response is '{}'.", response);
         QueryPlan queryPlan = getQueryPlan(response, logger);
+        validatePartitionNum(queryPlan, cfg, logger);
         Map<String, List<Long>> be2Tablets = selectBeForTablet(queryPlan, logger);
         return tabletsMapToPartition(
                 cfg,
@@ -268,6 +271,30 @@ public class RestService implements Serializable {
                 tableIdentifiers[1],
                 logger);
 
+    }
+
+    /**
+     * to validate the partition number for the query sql, to avoid full table scan and make the cluster unavailable
+     * @param queryPlan
+     * @param cfg configuration of request
+     * @param logger {@link Logger}
+     * @throws DorisException throw when validate partition size failed
+     */
+    static void validatePartitionNum(QueryPlan queryPlan, Settings cfg, Logger logger) throws DorisException {
+        int partitionSize = DORIS_PARTITION_SIZE_DEFAULT;
+        if (cfg.getProperty(DORIS_PARTITION_SIZE) != null) {
+            try {
+                partitionSize = Integer.parseInt(cfg.getProperty(DORIS_PARTITION_SIZE));
+            } catch (NumberFormatException e) {
+                logger.warn(PARSE_NUMBER_FAILED_MESSAGE, DORIS_PARTITION_SIZE, cfg.getProperty(DORIS_PARTITION_SIZE));
+            }
+        }
+
+        if (partitionSize != -1 && queryPlan.getPartitions().size() > partitionSize) {
+            String errMsg = "Partition Size is exceed limitation, partition limitation is {}." + queryPlan.getStatus();
+            logger.error(errMsg);
+            throw new DorisException(errMsg);
+        }
     }
 
     /**
