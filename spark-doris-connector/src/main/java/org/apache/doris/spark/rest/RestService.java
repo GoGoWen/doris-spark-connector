@@ -291,7 +291,8 @@ public class RestService implements Serializable {
         }
 
         if (partitionSize != -1 && queryPlan.getPartitions().size() > partitionSize) {
-            String errMsg = "Partition Size is exceed limitation, partition limitation is {}." + queryPlan.getStatus();
+            String errMsg = "Partition Size is exceed limitation, partition limitation is {"  + partitionSize  +
+                    "}, request partition size is {"+ queryPlan.getPartitions().size()+"}";
             logger.error(errMsg);
             throw new DorisException(errMsg);
         }
